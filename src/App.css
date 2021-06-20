@@ -1,0 +1,69 @@
+.normal{
+  background: url(https://images.pexels.com/photos/600114/pexels-photo-600114.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  filter: brightness(70%);
+  transition: all 3s ease;
+}
+.cold{
+  background: url(https://images.pexels.com/photos/1076885/pexels-photo-1076885.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  filter: brightness(70%);
+  transition: all 3s ease;
+}
+.sunlight{
+  background: url(https://images.pexels.com/photos/965968/pexels-photo-965968.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  color: white;
+  filter: brightness(70%);
+  transition: all 3s ease;
+}
+.sunrise{
+  background: url(https://images.pexels.com/photos/1001435/pexels-photo-1001435.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  filter: brightness(70%);
+  transition: all 3s ease;
+}
+.search_form{
+  text-align: center;
+}
+.search_form form input{
+  margin-top: 30px;
+  width: 300px;
+  padding: 10px;
+  border: none;
+  outline: none;
+  background-color: rgba(0, 0, 0, 0.324);
+  color: white;
+  font-size: 1rem;
+}
+.search_form form input::placeholder{
+  color: white;
+}
+.search_type{
+  margin: 20px 0;
+}
+.search_form form h3{
+  color: rgb(240, 178, 8);
+  background-color: rgba(255, 166, 0, 0.91);
+  display: inline;
+  color: rgb(88, 88, 88);
+  padding: 5px;
+}
+.divider{
+  margin-top: 580px;
+}
+
+/* @media (max-width:992px) {
+  .divider{
+    margin-top: 500px;
+  }
+  
+} */
