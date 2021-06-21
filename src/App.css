@@ -12,16 +12,16 @@
   background-position: center;
   background-size: cover;
   filter: brightness(70%);
-  transition: all 3s ease;
+  transition: all 1s ease;
 }
 .sunlight{
   background: url(https://images.pexels.com/photos/965968/pexels-photo-965968.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);
   height: 100%;
   background-position: center;
   background-size: cover;
-  color: white;
+  color: rgb(13, 61, 43);
   filter: brightness(70%);
-  transition: all 3s ease;
+  transition: all 1s ease;
 }
 .sunrise{
   background: url(https://images.pexels.com/photos/1001435/pexels-photo-1001435.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);
@@ -29,7 +29,7 @@
   background-position: center;
   background-size: cover;
   filter: brightness(70%);
-  transition: all 3s ease;
+  transition: all 1s ease;
 }
 .search_form{
   text-align: center;
@@ -58,7 +58,7 @@
   padding: 5px;
 }
 .divider{
-  margin-top: 580px;
+  margin-top: 500px;
 }
 
 /* @media (max-width:992px) {
