@@ -19,19 +19,41 @@ function App() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    navigator.geolocation.getCurrentPosition(function (position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      getWeatherByLoc(lat, lon);
+    });
   }, []);
 
-  useEffect(() => {
-    axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${enterData}&APPID=${APIkey}&units=metric`)
+  const getWeatherByLoc = (lat, lon) => {
+    axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${APIkey}&units=metric`)
       .then((res) => {
         setData(res.data.main);
         setData1(res.data);
         setSystem(res.data.sys)
         setWind(res.data.weather)
         setSpeed(res.data.wind)
+        setShow(true);
       })
+      .catch((err) => {
+          console.log(err);
+      })
+  }
 
-  }, [enterData])
+  useEffect(() => {
+    if (enterData) {
+      axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${enterData}&APPID=${APIkey}&units=metric`)
+        .then((res) => {
+          setData(res.data.main);
+          setData1(res.data);
+          setSystem(res.data.sys)
+          setWind(res.data.weather)
+          setSpeed(res.data.wind)
+          setShow(true);
+        })
+    }
+  }, [enterData, APIkey])
 
   const handleSearch = (e) => {
     setSearch(e.target.value)

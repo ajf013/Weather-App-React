@@ -2,16 +2,15 @@ import React from 'react'
 import moment from 'moment';
 import './display.css';
 
-function DisplayData({myWeather, myWeatherLoc, sysCountry, windStatus, windSpeed}) {
+function DisplayData({ myWeather, myWeatherLoc, sysCountry, windStatus, windSpeed }) {
 
     const unixEpochTimeMS = myWeatherLoc.dt * 1000;
     const d = new Date(unixEpochTimeMS);
 
-    const unixTime = sysCountry.sunrise * 1000;
-    const sunRise = new Date(unixTime)
+    const timezoneOffset = myWeatherLoc.timezone;
 
-    const unixTime1 = sysCountry.sunset * 1000;
-    const sunSet = new Date(unixTime1)
+    const sunRise = moment.utc(sysCountry.sunrise * 1000).add(timezoneOffset, 'seconds');
+    const sunSet = moment.utc(sysCountry.sunset * 1000).add(timezoneOffset, 'seconds');
 
     return (
         <div>
@@ -27,16 +26,16 @@ function DisplayData({myWeather, myWeatherLoc, sysCountry, windStatus, windSpeed
                     <div className="weather_temp">
                         <div className="weather_change">
                             <p>High</p>
-                            <p>{myWeather.temp_max} ° C</p>
+                            <p>{Math.floor(myWeather.temp_max)} ° C</p>
                         </div>
                         <div className="weather_change">
                             <p>Low</p>
-                            <p>{myWeather.temp_min} ° C</p>
+                            <p>{Math.floor(myWeather.temp_min)} ° C</p>
                         </div>
                     </div>
                     <div className="weather_rain">
                         <div className="weather_change">
-                                <p>Humidity {myWeather.humidity}%</p>
+                            <p>Humidity {myWeather.humidity}%</p>
                         </div>
                     </div>
                     <div className="weather_temp">
@@ -51,8 +50,8 @@ function DisplayData({myWeather, myWeatherLoc, sysCountry, windStatus, windSpeed
                     </div>
                     <div className="weather_rain">
                         <div className="weather_change">
-                                <p>Wind Speed</p>
-                                <p>{windSpeed.speed} mph</p>
+                            <p>Wind Speed</p>
+                            <p>{windSpeed.speed} m/s</p>
                         </div>
                     </div>
                 </div>
