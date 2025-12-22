@@ -1,5 +1,3 @@
-[![Netlify Status](https://api.netlify.com/api/v1/badges/78a97edb-687c-429e-8ec0-24e908a1eea1/deploy-status)](https://app.netlify.com/projects/weathersearchreact/deploys)
-
 # Weather App React
 Weather App created using ReactJs. This application allows users to check the weather forecast for various cities around the world, as well as their current location.
 
