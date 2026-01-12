@@ -1,60 +1,75 @@
-.footer_content{
+.footer_content {
     text-align: center;
     color: rgb(240, 156, 0);
-  /* background-color: rgba(255, 166, 0, 0.91); */
+    /* background-color: rgba(255, 166, 0, 0.91); */
 }
-.footer_main{
-    padding: 50px;
+
+.footer_main {
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.6);
+    margin-top: 20px;
 }
-.footer_Icons{
+
+.footer_Icons {
     text-align: center;
     padding: 20px 0;
 }
-.footer_Icons span{
+
+.footer_Icons span {
     margin: 0 5px;
 }
-.footer_Icons .footer_git a{
+
+.footer_Icons .footer_git a {
     color: rgb(83, 82, 83);
     transform: scale(1);
     transition: 0.5s;
 }
-.footer_Icons .footer_link a{
+
+.footer_Icons .footer_link a {
     color: rgba(255, 255, 255, 0.904);
     transform: scale(1);
     transition: 0.5s;
 }
-.footer_Icons .footer_insta a{
+
+.footer_Icons .footer_insta a {
     color: rgb(228, 216, 223);
     transform: scale(1);
     transition: 0.5s;
 }
-.footer_Icons .footer_wht a{
+
+.footer_Icons .footer_wht a {
     color: rgba(26, 131, 26, 0.958);
     transform: scale(1);
     transition: 0.5s;
 }
-.footer_Icons .footer_twi a{
+
+.footer_Icons .footer_twi a {
     color: rgb(39, 145, 202);
     transform: scale(1);
     transition: 0.5s;
 }
-.footer_Icons .footer_git a:hover{
+
+.footer_Icons .footer_git a:hover {
     color: rgb(196, 191, 191);
     transform: scale(1.2);
 }
-.footer_Icons .footer_link a:hover{
+
+.footer_Icons .footer_link a:hover {
     color: rgb(51, 39, 156);
     transform: scale(1.2);
 }
-.footer_Icons .footer_insta a:hover{
+
+.footer_Icons .footer_insta a:hover {
     color: rgb(198, 72, 202);
     transform: scale(1.2);
 }
-.footer_Icons .footer_wht a:hover{
+
+.footer_Icons .footer_wht a:hover {
     color: green;
     transform: scale(1.2);
 }
-.footer_Icons .footer_twi a:hover{
+
+.footer_Icons .footer_twi a:hover {
     color: lightblue;
     transform: scale(1.2);
 }

@@ -1,0 +1,65 @@
+.hourly-forecast-container {
+    margin-top: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    padding: 15px;
+    color: white;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    animation: fadeIn 1.2s ease-out;
+}
+
+.hourly-forecast-title {
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: left;
+}
+
+.hourly-forecast-list {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    gap: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+}
+
+.hourly-forecast-list::-webkit-scrollbar {
+    height: 6px;
+}
+
+.hourly-forecast-list::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 3px;
+}
+
+.hourly-forecast-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.hourly-time {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.hourly-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 5px;
+}
+
+.hourly-temp {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.hourly-desc {
+    font-size: 0.8rem;
+    text-transform: capitalize;
+    color: #ddd;
+}

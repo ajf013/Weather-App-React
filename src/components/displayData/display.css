@@ -1,42 +1,48 @@
-.weather_main{
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+.weather_main {
     background-color: rgba(255, 255, 255, 0.476);
     color: black;
     width: 400px;
     height: auto;
     padding: 10px;
     text-align: center;
+    margin: 20px auto;
+    border-radius: 10px;
+    animation: fadeIn 1s ease-out;
 }
-.waether_data{
+
+.waether_data {
     margin: 10px 0;
 }
-.weather_change{
+
+.weather_change {
     margin: 0 10px;
 }
-.weather_change p{
+
+.weather_change p {
     font-size: 1.5rem;
 }
-.weather_rain{
+
+.weather_rain {
     margin: 30px 0;
 }
-.weather_temp{
+
+.weather_temp {
     display: flex;
     justify-content: space-around;
-}   
-.weather_other{
+}
+
+.weather_other {
     margin: 20px 0;
 }
 
 @media (max-width:600px) {
-    .weather_main{
+    .weather_main {
         width: 300px;
         height: auto;
         font-size: 16px;
     }
-    .weather_change p{
+
+    .weather_change p {
         font-size: 1rem;
     }
 }
