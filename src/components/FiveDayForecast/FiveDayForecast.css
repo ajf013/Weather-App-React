@@ -1,0 +1,133 @@
+.fiveday-forecast-container {
+  padding: 20px;
+  width: 100%;
+}
+
+.fiveday-forecast-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: var(--text-primary);
+  letter-spacing: 0.25px;
+}
+
+.fiveday-forecast-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fiveday-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fiveday-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.fiveday-day {
+  width: 100px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.fiveday-day.highlight {
+  color: var(--accent-color);
+  font-weight: 700;
+}
+
+.fiveday-condition {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 130px;
+}
+
+.fiveday-icon {
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.fiveday-desc-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.fiveday-temp-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-grow: 1;
+  max-width: 450px;
+}
+
+.fiveday-temp {
+  font-size: 0.95rem;
+  font-weight: 600;
+  width: 32px;
+  text-align: center;
+}
+
+.fiveday-temp.min {
+  color: var(--text-muted);
+}
+
+.fiveday-temp.max {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Horizontal Temp Range Bar */
+.range-bar-container {
+  flex-grow: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.range-bar-fill {
+  height: 100%;
+  position: absolute;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #38bdf8 0%, #38bdf8 40%, #facc15 80%, #fb923c 100%);
+  box-shadow: 0 0 4px rgba(56, 189, 248, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 650px) {
+  .fiveday-item {
+    padding: 12px 6px;
+    gap: 8px;
+  }
+  
+  .fiveday-day {
+    width: 80px;
+    font-size: 0.9rem;
+  }
+  
+  .fiveday-condition {
+    width: 100px;
+  }
+  
+  .fiveday-desc-text {
+    display: none; /* Hide detailed text on small screens to fit temp bars */
+  }
+  
+  .fiveday-temp-section {
+    max-width: none;
+  }
+}
