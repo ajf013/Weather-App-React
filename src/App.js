@@ -11,8 +11,10 @@ import Footer from './components/footer/Footer';
 
 function App() {
   const [search, setSearch] = useState('');
-  const [enterData, setEnterData] = useState('');
   
+  // Unified location query state: { q: "CityName" } or { lat: 12.3, lon: 45.6 }
+  const [queryLoc, setQueryLoc] = useState(null);
+
   // Weather states
   const [myData, setData] = useState({});
   const [myData1, setData1] = useState({});
@@ -28,7 +30,7 @@ function App() {
   const [error, setError] = useState('');
   const [favorites, setFavorites] = useState([]);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
-  const [widgetMode, setWidgetMode] = useState(false); // Widget view active state
+  const [widgetMode, setWidgetMode] = useState(false);
 
   const APIkey = process.env.REACT_APP_API_KEY;
 
@@ -46,14 +48,14 @@ function App() {
       requestUserLocation();
     } else if (permission === 'denied') {
       const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
-      setEnterData(lastCity);
+      setQueryLoc({ q: lastCity });
     } else {
       setShowLocationPrompt(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Request browser location and fetch weather
+  // Request browser location and set coordinate query
   const requestUserLocation = () => {
     setLoading(true);
     setShowLocationPrompt(false);
@@ -62,13 +64,13 @@ function App() {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
         localStorage.setItem('location_permission', 'granted');
-        getWeatherByLoc(lat, lon, unit);
+        setQueryLoc({ lat, lon });
       },
       (err) => {
         console.error("Geolocation error:", err);
         localStorage.setItem('location_permission', 'denied');
         const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
-        setEnterData(lastCity);
+        setQueryLoc({ q: lastCity });
       }
     );
   };
@@ -78,7 +80,7 @@ function App() {
     localStorage.setItem('location_permission', 'denied');
     setShowLocationPrompt(false);
     const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
-    setEnterData(lastCity);
+    setQueryLoc({ q: lastCity });
   };
 
   // Sync favorites to local storage
@@ -95,44 +97,20 @@ function App() {
     localStorage.setItem('weather_favs', JSON.stringify(updated));
   };
 
-  // Fetch weather by geographic coordinates
-  const getWeatherByLoc = (lat, lon, currentUnit) => {
-    setLoading(true);
-    setError('');
-    axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${APIkey}&units=${currentUnit}`)
-      .then((res) => {
-        setData(res.data.main);
-        setData1(res.data);
-        setSystem(res.data.sys);
-        setWind(res.data.weather);
-        setSpeed(res.data.wind);
-        setShow(true);
-        setLoading(false);
-        localStorage.setItem('last_searched', res.data.name);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Could not get weather for your location. Loading Coimbatore instead.");
-        setLoading(false);
-        setEnterData("Coimbatore");
-      });
-
-    axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&APPID=${APIkey}&units=${currentUnit}`)
-      .then((res) => {
-        setForecastData(res.data.list);
-      })
-      .catch((err) => {
-        console.error("Forecast Error:", err);
-      });
-  };
-
-  // Fetch weather and forecast when enterData or unit changes
+  // Fetch weather and forecast when queryLoc or unit changes
   useEffect(() => {
-    if (!enterData) return;
+    if (!queryLoc) return;
 
     setLoading(true);
     setError('');
-    axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${enterData}&APPID=${APIkey}&units=${unit}`)
+
+    const params = {
+      APPID: APIkey,
+      units: unit,
+      ...queryLoc
+    };
+
+    axios.get('https://api.openweathermap.org/data/2.5/weather', { params })
       .then((res) => {
         setData(res.data.main);
         setData1(res.data);
@@ -141,15 +119,21 @@ function App() {
         setSpeed(res.data.wind);
         setShow(true);
         setLoading(false);
+        // Persist city name as last searched
         localStorage.setItem('last_searched', res.data.name);
       })
       .catch((err) => {
         console.error(err);
-        setError(`City "${enterData}" not found or failed to load. Please verify spelling.`);
+        if (queryLoc.q) {
+          setError(`City "${queryLoc.q}" not found or failed to load. Please verify spelling.`);
+        } else {
+          setError("Could not get weather for your location. Loading Coimbatore instead.");
+          setQueryLoc({ q: "Coimbatore" });
+        }
         setLoading(false);
       });
 
-    axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${enterData}&APPID=${APIkey}&units=${unit}`)
+    axios.get('https://api.openweathermap.org/data/2.5/forecast', { params })
       .then((res) => {
         setForecastData(res.data.list);
       })
@@ -157,7 +141,7 @@ function App() {
         console.error("Forecast Error:", err);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enterData, unit, APIkey]);
+  }, [queryLoc, unit, APIkey]);
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -166,7 +150,7 @@ function App() {
   const handleData = (e) => {
     e.preventDefault();
     if (search.trim()) {
-      setEnterData(search.trim());
+      setQueryLoc({ q: search.trim() });
       setSearch("");
     }
   };
@@ -281,12 +265,12 @@ function App() {
           {!widgetMode && (
             <div className="quick-chips">
               {favorites.map((city) => (
-                <button key={city} className="chip favorite" onClick={() => setEnterData(city)}>
+                <button key={city} className="chip favorite" onClick={() => setQueryLoc({ q: city })}>
                   <Icon name="star" /> {city}
                 </button>
               ))}
               {favorites.length === 0 && ["Coimbatore", "London", "Dubai", "New York"].map((city) => (
-                <button key={city} className="chip" onClick={() => setEnterData(city)}>
+                <button key={city} className="chip" onClick={() => setQueryLoc({ q: city })}>
                   {city}
                 </button>
               ))}
@@ -314,7 +298,7 @@ function App() {
             <div style={{
               maxWidth: '1000px',
               width: '95%',
-              margin: widgetMode ? '0 auto' : '0 auto',
+              margin: '0 auto',
               display: 'flex',
               flexDirection: 'column',
               gap: '20px',
