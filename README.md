@@ -2,7 +2,7 @@
 
 ### 🌐 [Live Site](https://weather.fcruz.org/)
 
-A premium, production-grade weather dashboard built with React. This application offers a high-fidelity glassmorphic user interface complete with dynamic background particle animations matching current weather conditions, an interactive SVG hourly temperature trend line, detailed metric cards (like a rotating wind compass), weekly temperature range bars, local storage bookmarking, and a toggleable iOS/Android-style compact Widget Mode.
+A premium, production-grade weather dashboard built with React. This application offers a high-fidelity glassmorphic user interface complete with dynamic background particle animations matching current weather conditions, an interactive SVG hourly temperature trend line, Air Quality Index (AQI) monitoring, detailed metric cards (like a rotating wind compass), weekly temperature range bars, persistent location permission memory, local storage bookmarking, and a toggleable iOS/Android-style compact Widget Mode.
 
 ---
 
@@ -27,11 +27,12 @@ graph TD
     App -->|Coordinates / City Name| API[OpenWeatherMap API]
     API -->|Current Weather & Timezone| App
     API -->|5-Day / 3-Hour Forecast| App
+    API -->|Air Quality Index API| App
     
-    App -->|Persistence| LS[(Local Storage Favorites & History)]
+    App -->|Persistence| LS[(Local Storage Favorites, Recents & Location Memory)]
     
-    App -->|City Clock, Toggle states, Metrics| DisplayData[DisplayData Component]
-    DisplayData -->|Toggles unit/widget| App
+    App -->|City Clock, AQI, Metrics & GPS Sync| DisplayData[DisplayData Component]
+    DisplayData -->|Toggles unit/widget & location re-sync| App
     
     App -->|Forecast list & SVG curves| HourlyForecast[HourlyForecast Component]
     App -->|Forecast list & Range Bars| FiveDayForecast[FiveDayForecast Component]
@@ -47,13 +48,10 @@ graph TD
 ```
 Weather-App-React/
 ├── public/
-│   ├── index.html
-│   ├── manifest.json              # PWA manifest configurations
-│   └── favicon.ico
 ├── src/
 │   ├── components/
 │   │   ├── displayData/
-│   │   │   ├── DisplayData.js     # Main bento card & metrics
+│   │   │   ├── DisplayData.js     # Main bento card, AQI card & location sync
 │   │   │   └── display.css
 │   │   ├── HourlyForecast/
 │   │   │   ├── HourlyForecast.js  # Hourly list & Bezier SVG trend graph
@@ -65,7 +63,7 @@ Weather-App-React/
 │   │   │   ├── WeatherEffects.js  # Dynamic animations (rain, snow, clouds, sun glow)
 │   │   │   └── WeatherEffects.css
 │   │   └── footer/
-│   │       ├── Footer.js
+│   │       ├── Footer.js          # Footer links & location reset action
 │   │       └── footer.css
 │   ├── App.js                     # Core application state coordinator
 │   ├── App.css                    # Theme classes, global variables & transitions
@@ -82,40 +80,31 @@ Weather-App-React/
 
 ---
 
-## 🔄 Application Workflow
+## 🔄 Key Features & Application Workflow
 
-### 1. Startup & Geolocation Check
-* Upon loading, `App.js` checks `localStorage` to load favorited cities.
-* It checks the browser's geolocation status:
-  - **Granted**: Automatically triggers GPS geolocation and fetches weather for your coordinates.
-  - **Prompt**: Renders a glassmorphic **Location Request Prompt** explaining usage. Allows clicking "Allow Access" (triggers native prompt) or "Search Manually".
-  - **Denied**: Avoids native alerts, loading your last searched city (or Coimbatore by default).
+### 1. Smart Location Permission Memory
+* Uses native **Browser Permissions API** (`navigator.permissions.query`) alongside `localStorage` persistence.
+* **Asks Only Once**: On a device's first visit, the app prompts for location access. Once granted or denied, it remembers the user's preference and never asks again unless manually cleared.
+* **Cached Coordinates & On-Demand Sync**: Caches last known GPS coordinates (`last_lat`, `last_lon`) for instant loading on app open. Users can tap the GPS arrow icon next to the city name to re-detect location at any time, or click "Reset Location Permission" in the footer.
 
-### 2. Live API Communication
-* Sends parallel queries to the OpenWeatherMap API:
-  - `data/2.5/weather` (Current conditions, wind degrees, visibility, humidity, timezone).
-  - `data/2.5/forecast` (5-day forecast at 3-hour intervals).
-* Supports dynamically appending `units=metric` (°C, m/s) or `units=imperial` (°F, mph).
+### 2. Air Quality Index (AQI) Monitoring
+* Fetches real-time air pollution metrics from OpenWeatherMap (`/data/2.5/air_pollution`).
+* Displays a dedicated **Air Quality Bento Card** with AQI levels (Good, Fair, Moderate, Poor, Very Poor), color-coded status badges, and PM2.5 pollutant concentration.
 
-### 3. Dynamic Visual Rendering & Animations
-* Sets background wrapper classes based on the weather main status (`Rain`, `Clear`, `Clouds`, `Snow`, etc.) overlaying Unsplash backdrop photography.
-* Launches `<WeatherEffects />` to draw hardware-accelerated (GPU-friendly `translate3d`) animation overlays:
-  - **Rain**: Falling linear blue-white streaks.
-  - **Snow**: Drifting circular flakes swaying horizontally.
-  - **Clouds**: Semi-transparent drifting ovals.
-  - **Clear**: Pulsing sun halo.
-  - **Thunderstorm**: Lightning flashes matching rain.
+### 3. Recent Search History & Favorites
+* Persists favorited cities and up to 5 recent city searches in `localStorage`.
+* Displays interactive quick-chips for 1-click switching between favorite and recent locations.
 
-### 4. Custom Calculations & Layout
-* **Bento Grid**: Distributes pressure, humidity, visibility, and apparent feels-like index into individual dashboard modules. Employs a **wind compass pointer** rotated by the degree metrics.
-* **Ticking Clock**: Runs a local ticking timer adjusted to the specific timezone offset of the searched city.
-* **Hourly Trend SVG**: Computes Bezier curve vectors over the forecast data, aligning nodes and temperature text horizontally under scroll columns.
-* **5-Day Range Bars**: Calculates the week's maximum temperature stretch and graphs daily spreads proportionally inside horizontal range bars.
+### 4. Extreme Weather Warning Alerts
+* Evaluates conditions in real-time and displays warning banners for severe weather (Thunderstorms, Squalls/Tornadoes, Extreme Heat > 38°C, and Freezing Temps < -5°C).
 
-### 5. In-App Widget Mode
-* Toggling **Widget View** shifts the interface into a compact 440px glass card containing only the hero city, ticking local time, temperature, and current conditions.
-* Hides navigation tabs, footers, search history, hourly lines, and 5-day charts.
-* A floating exit controller floats at the top-right corner to allow a return to the full dashboard.
+### 5. Live Weather Data & Dynamic Background Effects
+* Sends parallel requests to OpenWeatherMap API for current weather and 5-day / 3-hour forecast data.
+* Adapts background scenes using hardware-accelerated (GPU `translate3d`) particle effects for Rain, Snow, Thunderstorms, Cloud cover, and Clear Skies.
+
+### 6. Bento Dashboard & In-App Widget Mode
+* **Bento Grid**: Interactive modules for Wind status (with dynamic compass needle), Pressure, Humidity progress bar, Visibility, and Sunrise/Sunset times.
+* **Widget Mode**: Toggles into a compact 440px glass card containing only essential weather metrics.
 
 ---
 
@@ -137,7 +126,10 @@ Weather-App-React/
    ```bash
    cp .env.example .env
    ```
-   Open the `.env` file and replace the placeholder value with your active API key.
+   Open the `.env` file and set your key:
+   ```env
+   REACT_APP_API_KEY=your_openweathermap_api_key
+   ```
 
 4. **Run the app locally**:
    ```bash
@@ -150,6 +142,8 @@ Weather-App-React/
    npm run build
    ```
 
+---
+
 ## Author
 
 ### 👤 Francis Ponnu Cruz I
@@ -161,4 +155,3 @@ Weather-App-React/
 [![Twitter/X](https://img.shields.io/badge/X-@Itsme__Ajf013-000000?style=flat-square&logo=x)](https://x.com/Itsme_Ajf013)
 [![Website](https://img.shields.io/badge/Website-fcruz.org-2D3748?style=flat-square&logo=googlechrome&logoColor=white)](https://fcruz.org)
 [![Linktree](https://img.shields.io/badge/Linktree-AJF013-39E09B?style=flat-square&logo=linktree&logoColor=white)](https://linktr.ee/AJF013)
-

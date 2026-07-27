@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Icon } from 'semantic-ui-react';
 import DisplayData from './components/displayData/DisplayData';
 import HourlyForecast from './components/HourlyForecast/HourlyForecast';
@@ -23,57 +23,76 @@ function App() {
   const [wind, setWind] = useState([]);
   const [speed, setSpeed] = useState({});
   const [show, setShow] = useState(false);
+  const [aqiData, setAqiData] = useState(null);
 
   // App UX states
   const [unit, setUnit] = useState('metric'); // 'metric' or 'imperial'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [favorites, setFavorites] = useState([]);
+  const [recentSearches, setRecentSearches] = useState([]);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [widgetMode, setWidgetMode] = useState(false);
 
-  const APIkey = process.env.REACT_APP_API_KEY;
+  const APIkey = process.env.REACT_APP_API_KEY || 'e7f0828f690448abc30adb5d712c9658';
 
-  // Load favorites & check location permission on mount
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    const savedFavs = localStorage.getItem('weather_favs');
-    if (savedFavs) {
-      setFavorites(JSON.parse(savedFavs));
-    }
-
-    const permission = localStorage.getItem('location_permission');
-    
-    if (permission === 'granted') {
-      requestUserLocation();
-    } else if (permission === 'denied') {
-      const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
-      setQueryLoc({ q: lastCity });
-    } else {
-      setShowLocationPrompt(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Helper to add search to recent history
+  const addRecentSearch = (cityName) => {
+    if (!cityName) return;
+    const cleanName = cityName.trim();
+    setRecentSearches(prev => {
+      const filtered = prev.filter(c => c.toLowerCase() !== cleanName.toLowerCase());
+      const updated = [cleanName, ...filtered].slice(0, 5);
+      localStorage.setItem('weather_recents', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // Request browser location and set coordinate query
-  const requestUserLocation = () => {
+  const requestUserLocation = useCallback(() => {
     setLoading(true);
     setShowLocationPrompt(false);
+
+    if (!navigator.geolocation) {
+      const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
+      setQueryLoc({ q: lastCity });
+      setLoading(false);
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
         localStorage.setItem('location_permission', 'granted');
+        localStorage.setItem('last_lat', lat);
+        localStorage.setItem('last_lon', lon);
         setQueryLoc({ lat, lon });
       },
       (err) => {
-        console.error("Geolocation error:", err);
-        localStorage.setItem('location_permission', 'denied');
-        const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
-        setQueryLoc({ q: lastCity });
+        console.warn("Geolocation fallback triggered:", err.message);
+        // Only mark denied if user explicitly blocked browser prompt
+        if (err.code === 1) {
+          localStorage.setItem('location_permission', 'denied');
+        }
+        
+        // Fallback to cached lat/lon if present, else last searched city
+        const cachedLat = localStorage.getItem('last_lat');
+        const cachedLon = localStorage.getItem('last_lon');
+        if (cachedLat && cachedLon) {
+          setQueryLoc({ lat: parseFloat(cachedLat), lon: parseFloat(cachedLon) });
+        } else {
+          const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
+          setQueryLoc({ q: lastCity });
+        }
+      },
+      {
+        maximumAge: 300000, // 5 min cached location
+        timeout: 10000,
+        enableHighAccuracy: false
       }
     );
-  };
+  }, []);
 
   // Decline location and load last searched city/default Coimbatore
   const handleDeclineLocation = () => {
@@ -82,6 +101,88 @@ function App() {
     const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
     setQueryLoc({ q: lastCity });
   };
+
+  // Reset location permission preference manually
+  const handleResetLocationPermission = () => {
+    localStorage.removeItem('location_permission');
+    localStorage.removeItem('last_lat');
+    localStorage.removeItem('last_lon');
+    setShowLocationPrompt(true);
+    setShow(false);
+  };
+
+  // Sync / Re-detect location on demand
+  const handleSyncLocation = () => {
+    requestUserLocation();
+  };
+
+  // Check location permission & load saved preferences on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    const savedFavs = localStorage.getItem('weather_favs');
+    if (savedFavs) {
+      try { setFavorites(JSON.parse(savedFavs)); } catch (e) {}
+    }
+
+    const savedRecents = localStorage.getItem('weather_recents');
+    if (savedRecents) {
+      try { setRecentSearches(JSON.parse(savedRecents)); } catch (e) {}
+    }
+
+    const storedPerm = localStorage.getItem('location_permission');
+    const cachedLat = localStorage.getItem('last_lat');
+    const cachedLon = localStorage.getItem('last_lon');
+
+    // Use native Browser Permissions API if available for modern permission check
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' })
+        .then((result) => {
+          if (result.state === 'granted') {
+            localStorage.setItem('location_permission', 'granted');
+            if (cachedLat && cachedLon) {
+              setQueryLoc({ lat: parseFloat(cachedLat), lon: parseFloat(cachedLon) });
+            } else {
+              requestUserLocation();
+            }
+          } else if (result.state === 'denied') {
+            localStorage.setItem('location_permission', 'denied');
+            const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
+            setQueryLoc({ q: lastCity });
+          } else {
+            // Permission state is 'prompt'
+            if (storedPerm === 'granted') {
+              requestUserLocation();
+            } else if (storedPerm === 'denied') {
+              const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
+              setQueryLoc({ q: lastCity });
+            } else {
+              setShowLocationPrompt(true);
+            }
+          }
+        })
+        .catch(() => {
+          // Fallback logic
+          if (storedPerm === 'granted') {
+            requestUserLocation();
+          } else if (storedPerm === 'denied') {
+            const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
+            setQueryLoc({ q: lastCity });
+          } else {
+            setShowLocationPrompt(true);
+          }
+        });
+    } else {
+      if (storedPerm === 'granted') {
+        requestUserLocation();
+      } else if (storedPerm === 'denied') {
+        const lastCity = localStorage.getItem('last_searched') || "Coimbatore";
+        setQueryLoc({ q: lastCity });
+      } else {
+        setShowLocationPrompt(true);
+      }
+    }
+  }, [requestUserLocation]);
 
   // Sync favorites to local storage
   const toggleFavorite = (cityName) => {
@@ -97,7 +198,7 @@ function App() {
     localStorage.setItem('weather_favs', JSON.stringify(updated));
   };
 
-  // Fetch weather and forecast when queryLoc or unit changes
+  // Fetch weather, forecast, and AQI when queryLoc or unit changes
   useEffect(() => {
     if (!queryLoc) return;
 
@@ -119,11 +220,29 @@ function App() {
         setSpeed(res.data.wind);
         setShow(true);
         setLoading(false);
+        
         // Persist city name as last searched
-        localStorage.setItem('last_searched', res.data.name);
+        if (res.data.name) {
+          localStorage.setItem('last_searched', res.data.name);
+          addRecentSearch(res.data.name);
+        }
+
+        // Fetch Air Quality Index (AQI) using coordinates
+        if (res.data.coord) {
+          const { lat, lon } = res.data.coord;
+          axios.get('https://api.openweathermap.org/data/2.5/air_pollution', {
+            params: { lat, lon, APPID: APIkey }
+          })
+          .then((aqiRes) => {
+            if (aqiRes.data && aqiRes.data.list && aqiRes.data.list[0]) {
+              setAqiData(aqiRes.data.list[0]);
+            }
+          })
+          .catch((err) => console.error("AQI load error:", err));
+        }
       })
       .catch((err) => {
-        console.error(err);
+        console.error("Weather load error:", err);
         if (queryLoc.q) {
           setError(`City "${queryLoc.q}" not found or failed to load. Please verify spelling.`);
         } else {
@@ -140,7 +259,6 @@ function App() {
       .catch((err) => {
         console.error("Forecast Error:", err);
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryLoc, unit, APIkey]);
 
   const handleSearch = (e) => {
@@ -188,6 +306,29 @@ function App() {
         return 'normal';
     }
   };
+
+  // Evaluate extreme weather warning
+  const getWeatherAlert = () => {
+    if (!show || !wind || !wind[0]) return null;
+    const cond = wind[0].main.toLowerCase();
+    const tempVal = unit === 'metric' ? myData.temp : (myData.temp - 32) * 5/9;
+
+    if (cond.includes('thunderstorm')) {
+      return { type: 'danger', message: 'Thunderstorm Advisory: Seek shelter and keep clear of electrical appliances.' };
+    }
+    if (cond.includes('tornado') || cond.includes('squall')) {
+      return { type: 'danger', message: 'Severe Weather Warning: Stay indoors away from windows.' };
+    }
+    if (tempVal > 38) {
+      return { type: 'warning', message: 'Extreme Heat Alert: Stay hydrated and limit direct sun exposure.' };
+    }
+    if (tempVal < -5) {
+      return { type: 'warning', message: 'Freezing Temperature Alert: Wear layered warm clothing outdoors.' };
+    }
+    return null;
+  };
+
+  const weatherAlert = getWeatherAlert();
 
   return (
     <div className={`${getBackgroundClass()} ${widgetMode ? 'widget-mode-active' : ''}`}>
@@ -261,19 +402,48 @@ function App() {
             </div>
           )}
 
-          {/* Favorite quick chips (Hidden in Widget Mode) */}
+          {/* Quick chips (Favorites & Recent Searches) */}
           {!widgetMode && (
             <div className="quick-chips">
               {favorites.map((city) => (
-                <button key={city} className="chip favorite" onClick={() => setQueryLoc({ q: city })}>
+                <button key={`fav-${city}`} className="chip favorite" onClick={() => setQueryLoc({ q: city })}>
                   <Icon name="star" /> {city}
                 </button>
               ))}
-              {favorites.length === 0 && ["Coimbatore", "London", "Dubai", "New York"].map((city) => (
-                <button key={city} className="chip" onClick={() => setQueryLoc({ q: city })}>
+              {recentSearches
+                .filter(city => !favorites.includes(city))
+                .map((city) => (
+                  <button key={`rec-${city}`} className="chip recent" onClick={() => setQueryLoc({ q: city })}>
+                    <Icon name="history" /> {city}
+                  </button>
+                ))}
+              {favorites.length === 0 && recentSearches.length === 0 && ["Coimbatore", "London", "Dubai", "New York"].map((city) => (
+                <button key={`def-${city}`} className="chip" onClick={() => setQueryLoc({ q: city })}>
                   {city}
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Extreme weather alert banner */}
+          {weatherAlert && !widgetMode && (
+            <div className={`weather-alert-banner ${weatherAlert.type}`} style={{
+              maxWidth: '1000px',
+              width: '95%',
+              margin: '0 auto 15px auto',
+              padding: '12px 20px',
+              borderRadius: '12px',
+              background: weatherAlert.type === 'danger' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(245, 158, 11, 0.25)',
+              border: `1px solid ${weatherAlert.type === 'danger' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(245, 158, 11, 0.5)'}`,
+              backdropFilter: 'blur(8px)',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontWeight: 600
+            }}>
+              <Icon name={weatherAlert.type === 'danger' ? 'warning sign' : 'info circle'} size="large" />
+              <span>{weatherAlert.message}</span>
             </div>
           )}
 
@@ -310,12 +480,14 @@ function App() {
                 sysCountry={system} 
                 myWeatherLoc={myData1} 
                 myWeather={myData} 
+                aqiData={aqiData}
                 unit={unit}
                 setUnit={setUnit}
                 isFavorite={favorites.includes(myData1.name)}
                 toggleFavorite={toggleFavorite}
                 widgetMode={widgetMode}
                 setWidgetMode={setWidgetMode}
+                onSyncLocation={handleSyncLocation}
               />
               {!widgetMode && (
                 <>
@@ -331,7 +503,7 @@ function App() {
       {!widgetMode && (
         <>
           <div className="divider"></div>
-          <Footer />
+          <Footer onResetLocationPermission={handleResetLocationPermission} />
         </>
       )}
     </div>

@@ -9,12 +9,14 @@ function DisplayData({
   sysCountry, 
   windStatus, 
   windSpeed, 
+  aqiData,
   unit, 
   setUnit, 
   isFavorite, 
   toggleFavorite,
   widgetMode,
-  setWidgetMode
+  setWidgetMode,
+  onSyncLocation
 }) {
   const [localTime, setLocalTime] = useState('');
   const timezoneOffset = myWeatherLoc.timezone || 0;
@@ -42,6 +44,27 @@ function DisplayData({
   // Speed unit representation
   const speedUnit = unit === 'metric' ? 'm/s' : 'mph';
 
+  // Helper to interpret Air Quality Index (AQI 1 to 5)
+  const getAqiDetails = (index) => {
+    switch (index) {
+      case 1:
+        return { label: 'Good', color: '#4ade80', subtext: 'Air quality is satisfactory' };
+      case 2:
+        return { label: 'Fair', color: '#facc15', subtext: 'Acceptable air quality' };
+      case 3:
+        return { label: 'Moderate', color: '#fb923c', subtext: 'Sensitive groups take caution' };
+      case 4:
+        return { label: 'Poor', color: '#f87171', subtext: 'Unhealthy for sensitive groups' };
+      case 5:
+        return { label: 'Very Poor', color: '#c084fc', subtext: 'Health alert: High pollution' };
+      default:
+        return { label: 'N/A', color: 'var(--text-muted)', subtext: 'No data' };
+    }
+  };
+
+  const aqiInfo = aqiData ? getAqiDetails(aqiData.main.aqi) : null;
+  const pm25 = aqiData && aqiData.components ? Math.round(aqiData.components.pm2_5) : null;
+
   return (
     <div className={`weather-dashboard ${widgetMode ? 'widget-view' : ''}`}>
       {/* Hero Weather Section */}
@@ -51,13 +74,22 @@ function DisplayData({
             <h2>
               {myWeatherLoc.name}, {sysCountry.country}
               {!widgetMode && (
-                <button 
-                  className={`favorite-btn ${isFavorite ? 'active' : ''}`} 
-                  onClick={() => toggleFavorite(myWeatherLoc.name)}
-                  title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-                >
-                  <Icon name={isFavorite ? "star" : "star outline"} />
-                </button>
+                <>
+                  <button 
+                    className={`favorite-btn ${isFavorite ? 'active' : ''}`} 
+                    onClick={() => toggleFavorite(myWeatherLoc.name)}
+                    title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                  >
+                    <Icon name={isFavorite ? "star" : "star outline"} />
+                  </button>
+                  <button
+                    className="location-sync-btn"
+                    onClick={onSyncLocation}
+                    title="Detect Current GPS Location"
+                  >
+                    <Icon name="location arrow" />
+                  </button>
+                </>
               )}
             </h2>
             <p className="local-date">{moment().format('dddd, MMMM D, YYYY')}</p>
@@ -114,6 +146,29 @@ function DisplayData({
       {/* Bento Grid Metrics Dashboard (Hidden in Widget Mode) */}
       {!widgetMode && (
         <div className="bento-grid">
+          {/* Air Quality Index (AQI) */}
+          {aqiInfo && (
+            <div className="bento-card glass-panel aqi-card">
+              <div className="bento-card-header">
+                <Icon name="leaf" />
+                <span>Air Quality Index</span>
+              </div>
+              <div className="bento-card-body">
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                  <span className="metric-large-value" style={{ color: aqiInfo.color }}>
+                    AQI {aqiData.main.aqi}
+                  </span>
+                  <span className="aqi-badge" style={{ backgroundColor: aqiInfo.color, color: '#0f172a' }}>
+                    {aqiInfo.label}
+                  </span>
+                </div>
+                <span className="metric-subtext">
+                  {aqiInfo.subtext} {pm25 !== null ? `(PM2.5: ${pm25} µg/m³)` : ''}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Feels Like */}
           <div className="bento-card glass-panel">
             <div className="bento-card-header">

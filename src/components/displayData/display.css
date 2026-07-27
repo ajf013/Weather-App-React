@@ -79,6 +79,39 @@
   filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.5));
 }
 
+.location-sync-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--accent-color);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  font-size: 1rem;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.location-sync-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(45deg) scale(1.1);
+  color: #ffffff;
+}
+
+.aqi-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+
 .local-date {
   font-size: 1rem;
   color: var(--text-secondary);
